@@ -1,4 +1,4 @@
-const { Campus } = require("../database/models");
+const { Student, Campus } = require("../database/models");
 
 const seedDatabase = async () => {
   await Promise.all([
@@ -10,10 +10,16 @@ const seedDatabase = async () => {
     }),
     Campus.create({
       name: "College of Staten Island",
+      address: "Staten Island",
+      imageUrl: "",
       description: "A college on Staten Island",
     }),
-    Campus.create({
-      name: "John Jay College",
+    Student.create({
+      firstName: "James",
+      lastName: "Bond",
+      email: "jamesbond@james.com",
+      gpa: 4.0,
+      campusId: 1,
     }),
   ]);
 };

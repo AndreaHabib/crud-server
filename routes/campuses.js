@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const { Campus } = require("../database/models");
+const { Campus, Student } = require("../database/models");
 
 /* GET all campuses. */
 // /api/campuses
@@ -8,8 +8,9 @@ router.get("/", async (req, res, next) => {
   // try to get campuses object from database
   try {
     // campuses will be the result of the Campus.findAll promise
-    const campuses = await Campus.findAll();
+    const campuses = await Campus.findAll({ include: Student });
     // if campuses is valid, it will be sent as a json response
+    console.log(campuses);
     res.status(200).json(campuses);
   } catch (err) {
     // if there is an error, it'll passed via the next parameter to the error handler middleware
@@ -26,7 +27,7 @@ router.get("/:id", async (req, res, next) => {
   // query the database for a campus with matching id
   try {
     // if successful:
-    const campus = await Campus.findByPk(id);
+    const campus = await Campus.findByPk(id, { include: Student });
     // send back the campus as a response
     res.status(200).json(campus);
   } catch (err) {
@@ -34,6 +35,30 @@ router.get("/:id", async (req, res, next) => {
     // handle error
     next(err);
   }
+});
+
+// Route to get students associated with a campus
+// /api/campuses/:id/students
+// /api/campuses/456/students
+router.get("/:id/students", async (req, res, next) => {
+  const { id } = req.params;
+  // find the campus associated with the id
+  let foundCampus;
+  try {
+    foundCampus = await Campus.findByPk(id);
+  } catch (err) {
+    next(err);
+  }
+
+  try {
+    const studentsOfCampus = await foundCampus.getStudents();
+    res.status(200).json(studentsOfCampus);
+  } catch (err) {
+    next(err);
+  }
+
+  // find the students associated with the campus
+  // send back an array of students
 });
 
 // Route to handle adding a campus
@@ -76,7 +101,7 @@ router.put("/:id", async (req, res, next) => {
   try {
     // if successfull:
     // Find a campus with a matching id from the database
-    const campus = await Campus.findByPk(id);
+    const campus = await Campus.findByPk(id, { include: Student });
     // database would return a valid campus object or an error
     console.log(updatedObj);
     // modify the campus object with new form data
@@ -95,6 +120,7 @@ router.put("/:id", async (req, res, next) => {
 });
 
 // Route to handle removing a campus
+// /api/campuses/:id
 router.delete("/:id", async (req, res, next) => {
   const { id } = req.params;
   // get an id for a campus to delete
